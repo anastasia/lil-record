@@ -2,6 +2,7 @@ import os
 import time
 import random
 import subprocess
+import requests
 import RPi.GPIO as GPIO
 GPIO.setwarnings(True)
 GPIO.setmode(GPIO.BCM)
@@ -60,24 +61,26 @@ def main(pin):
             
         # print('counted', c)
 
+
 def create_answers_filename(question):
     filename = "%s_%s.wav" % (question, time.asctime().replace(' ', '_'))
     global answers_directory
     filename_fullpath = os.path.join(answers_dir, filename)
     return filename_fullpath
 
+
 def record_question():
     print("preparing to record")
-            # getting question filename
+    # getting question filename
     global questions_dir
     questions = get_all_questions()
     highest_num = 0
     if len(questions) > 0:
-      for q in questions:
-         name = q.split('/')[-1]
-         num = int(name.split('.wav')[0])
-         if num > highest_num:
-            highest_num = num
+        for q in questions:
+            name = q.split('/')[-1]
+            num = int(name.split('.wav')[0])
+            if num > highest_num:
+                highest_num = num
       highest_num += 1
     filename_fullpath = os.path.join(questions_dir, '%s.wav' % highest_num)
     print('getting ready to record question', filename_fullpath)
@@ -104,10 +107,18 @@ def play_question(count):
     # play beep
     print(' ======> BEEEEEEEEP <====== ')
     # play(os.path.join(recordings_dir, 'beep.wav'))
-    
+
+
+    # record answer
+
     filename = create_answers_filename(current_number)
     record(filename)
-    
+    url = "http://localhost:5000/upload/%s/%s" % ("answers", filename)
+    response = requests.post(url)
+    print("response:", response)
+    os.remove(filename)
+
+
 def call_operator():
     global action, questions_directory
     action = False
