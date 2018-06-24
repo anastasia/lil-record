@@ -63,13 +63,23 @@ def download_current_questions():
         name = file_obj['Key'].split('/')[-1]
         q = download(file_obj['Key'], name)
         with open(q, "r") as f:
-            questions[file_obj['Key']] = f.read()
+            number, rest_of_name = name.split('_')
+            questions[number] = f.read()
 
     return questions
 
+def get_current_question_by_number(number):
+    dircontents = get_contents("current")
+    for file_obj in dircontents:
+        name = file_obj['Key'].split('/')[-1]
+        q = download(file_obj['Key'], name)
+        with open(q, "r") as f:
+            num, rest_of_name = name.split('_')
+            if num == number:
+                return file_obj['Key']
 
 def move_file(src, dest):
-    print("moving file", src, dest)
+    print("calling move file")
     copy_source = {
         'Bucket': S3_BUCKET,
         'Key': src}
@@ -79,5 +89,12 @@ def move_file(src, dest):
     s3.delete_object(Bucket=S3_BUCKET, Key=src)
     return dest
 
-
+def get_answers(question_num):
+    question = get_current_question_by_number(question_num)
+    folder, filename = question.split('/')
+    name = filename.split('.')[0]
+    # get all files in answers dir
+    # find every one that matches name
+    # download
+    # write to local
 
