@@ -45,7 +45,7 @@ def check_messages():
             'icon_emoji': ":phone:"}
 
         command = m.get('text', '').split("<@%s> " % SLACK_BOT_ID)[1]
-        if  "list" in command:
+        if "list" in command:
             if command == "list questions":
                 res = requests.get("http://localhost:5000/questions")
                 questions = json.loads(res.text)
@@ -62,7 +62,7 @@ def check_messages():
             command_parts = command.split(' ')
             number = command_parts[2]
             new_question = " ".join(command_parts[3:])
-            response = requests.post("http://localhost:5000/change_current/%s" % number, json={'data':new_question})
+            response = requests.post("http://localhost:5000/change_current/%s" % number, json={'data': new_question})
             sc.api_call("chat.postMessage", text=response.text, **kwargs)
 
         elif "get answer" in command:

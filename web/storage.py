@@ -65,9 +65,10 @@ def download_current_questions():
         q = download(file_obj['Key'], name)
         with open(q, "r") as f:
             number, rest_of_name = name.split('_')
-            questions[number] = f.read()
+            questions[name] = f.read()
 
     return questions
+
 
 def get_current_question_by_number(number):
     dircontents = get_contents("current")
@@ -78,6 +79,7 @@ def get_current_question_by_number(number):
             num, rest_of_name = name.split('_')
             if num == number:
                 return file_obj['Key']
+
 
 def move_file(src, dest):
     print("calling move file")

@@ -17,6 +17,13 @@ def list_questions():
     questions = storage.download_current_questions()
     return Response(json.dumps(questions))
 
+
+@app.route("/questions/<question_number>")
+def get_question_at_number(question_number):
+    question = storage.get_current_question_by_number(question_number)
+    return Response(question)
+
+
 @app.route("/answers/<question_number>")
 def get_answers(question_number):
     print("views, get_answers", question_number)

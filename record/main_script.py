@@ -1,10 +1,14 @@
 import os
 import time
-import random
+import json
 import subprocess
 import requests
 import RPi.GPIO as GPIO
-from settings import *
+
+RECORDINGS_DIR = "recordings"
+ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
+SOUND_CARD = 0
+
 GPIO.setwarnings(True)
 GPIO.setmode(GPIO.BCM)
 
@@ -24,17 +28,22 @@ questions = []
 answers = []
 current_question = ''
 
+operator_has_been_called = False
+
+
 def text_to_speech(text):
     """
     Plays text using sound card
     """
-    cmd = 'espeak -s110 “%s” —stdout | aplay -D systemdefault:CARD=%s' % (text, SOUND_CARD)
+    cmd = 'espeak -s110 "%s" --stdout | aplay -D sysdefault:CARD=%s' % (text, SOUND_CARD)
     os.system(cmd)
+
 
 def play(filename):
     print("getting filename", filename)
     code = os.system('aplay --device=plughw:0,0 %s' % filename)
     return code
+
 
 def record(filename):
     code = os.system('arecord --device=plughw:0,0 --format=S16_LE --rate 44100 -V mono %s' % filename)
@@ -47,17 +56,23 @@ def record(filename):
 # like recording or playing back twice 
 action = True
 
+
 def main(pin):
+    """
+    10 - Call operator if not called
+    10 - Record answer to questions
+       - all other numbers: play question
+    """
     global c
+    global operator_has_been_called
+
     if GPIO.input(18) == GPIO.HIGH and c != 0:
         print("resetting!")
         c = 0
     else:
-        # 1 record answer
-        # 2 record question
-        # 3 listen to question
         if c == 0:
             return
+
         if c < 10 and c != 8 and GPIO.input(13) == GPIO.LOW and action:
             play_question(c)
             
@@ -65,8 +80,11 @@ def main(pin):
             record_question()
             
         elif c == 10 and GPIO.input(13) == GPIO.LOW and action:
-            call_operator()
-            
+            if not operator_has_been_called:
+                call_operator()
+            else:
+                record_answer(c)
+
         # print('counted', c)
 
 
@@ -74,8 +92,9 @@ def create_answers_filename(question):
     """
     Writing filename locally
     """
-    # get local question
-    filename = "%s_%s.wav" % (question, time.asctime().replace(' ', '_'))
+    name, filetype = question.split('.')
+    millis = int(round(time.time() * 1000))
+    filename = "%s_%s.wav" % (name, str(millis))
     return filename
 
 
@@ -98,25 +117,10 @@ def record_question():
     print('done recording question')
     # handle end
 
-def play_question(count):
-    global action, questions_dir
-    action = False
-    questions = get_all_questions()
 
-    question_to_ask = questions[count]
-
-    text_to_speech(question_to_ask)
-    # wait
-    time.sleep(3)
-    # play beep
-    print(' ======> BEEEEEEEEP <====== ')
-    # play(os.path.join(recordings_dir, 'beep.wav'))
-
-
-    # record answer
-
-    filename = create_answers_filename(current_number)
-
+def record_answer(count):
+    global current_question
+    filename = create_answers_filename(current_question)
     filename_path = os.path.join(ANSWERS_DIR, filename)
     record(filename_path)
     url = "http://localhost:5000/upload/%s/%s" % ("answers", filename)
@@ -125,9 +129,23 @@ def play_question(count):
     os.remove(filename_path)
 
 
-def call_operator():
-    global action, questions_directory
+def play_question(count):
+    global action, questions_dir, current_question
     action = False
+    questions = get_all_questions()
+    for filename in questions:
+        if filename[0:2] == "%s_" % str(count):
+            question_to_ask = questions[filename]
+            current_question = filename
+            text_to_speech(question_to_ask)
+            time.sleep(3)
+            break
+
+
+def call_operator():
+    global action, questions_directory, operator_has_been_called
+    action = False
+    operator_has_been_called = True
     play(os.path.join(recordings_dir, "instructions.wav"))
     
     
@@ -140,21 +158,16 @@ def count(pin):
 
 def get_all_questions():
     url = "http://localhost:5000/questions"
-    questions = requests.get(url)
-    # global questions_dir
-    # contents = os.listdir(questions_dir)
-    # recordings = []
-    # for q in contents:
-    #     filename, file_extension = os.path.splitext(q)
-    #     if file_extension == '.wav':
-    #         recordings.append("%s/%s" % (questions_dir, q))
-    # return contents
+    result = requests.get(url)
+    questions = json.loads(result.text)
     return questions
 
-def end_script(pin):
-   print("end script!")
-   # get_all_questions()
 
+def end_script(pin):
+    global operator_has_been_called, current_question
+    print("end script!")
+    operator_has_been_called = False
+    current_question = ""
 
 pid = subprocess.Popen(['python3', './killer.py'],
                  stdout=open('/dev/null', 'w'),
