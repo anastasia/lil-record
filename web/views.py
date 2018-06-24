@@ -17,10 +17,18 @@ def list_questions():
     questions = storage.download_current_questions()
     return Response(json.dumps(questions))
 
-
 @app.route("/answers/<question_number>")
-def list_answers(question_number):
+def get_answers(question_number):
+    print("views, get_answers", question_number)
     answers = storage.get_answers(question_number)
+    return Response(json.dumps(answers))
+
+
+
+@app.route("/answer/<question_number>")
+def get_answer(question_number):
+    print("views, get_answer", question_number)
+    answers = storage.get_random_answer(question_number)
     return Response(json.dumps(answers))
 
 
@@ -32,7 +40,7 @@ def upload(type_of_file, filename):
     filedir = os.path.join(settings.RECORDINGS_DIR, "%ss" % type_of_file)
     filepath = os.path.join(filedir, filename)
 
-    storage.upload(filepath, filename, folder=type_of_file)
+    storage.upload(filepath, folder=type_of_file)
     return Response("ok")
 
 

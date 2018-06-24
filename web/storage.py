@@ -1,5 +1,6 @@
 import os
 import boto3
+import random
 from settings import S3_KEY, S3_SECRET, S3_LOCATION, S3_BUCKET
 
 s3 = boto3.client(
@@ -89,7 +90,11 @@ def move_file(src, dest):
     s3.delete_object(Bucket=S3_BUCKET, Key=src)
     return dest
 
+
 def get_answers(question_num):
+    """
+    Get list of answer paths to question
+    """
     question = get_current_question_by_number(question_num)
     folder, filename = question.split('/')
     name_of_question = filename.split('.')[0]
@@ -102,8 +107,23 @@ def get_answers(question_num):
             answers.append(filepath)
     return answers
 
-    # get all files in answers dir
-    # find every one that matches name
-    # download
-    # write to local
 
+def get_random_answer(question_num):
+    """
+    Get random answer to question number
+    """
+    answers = get_answers(question_num)
+    if type(answers) != list:
+        return "Something went wrong"
+    if len(answers) == 0:
+        # no answers were found
+        return ""
+    print("answers", answers)
+    rand = random.randrange(0, len(answers))
+    local_filepath = "/tmp/%s" % answers[rand].split('/')[-1]
+    # download to tmp folder, only if file doesn't exist in local yet
+    if not os.path.exists(local_filepath):
+        upstream_filepath = os.path.join("answers", answers[rand])
+        download(upstream_filepath, local_filepath)
+
+    return local_filepath
