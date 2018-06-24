@@ -92,7 +92,16 @@ def move_file(src, dest):
 def get_answers(question_num):
     question = get_current_question_by_number(question_num)
     folder, filename = question.split('/')
-    name = filename.split('.')[0]
+    name_of_question = filename.split('.')[0]
+    all_answers = get_contents("answers")
+    answers = []
+    for file_obj in all_answers:
+        filepath = file_obj['Key'].split('/')[-1]
+        name = filepath.split('.')[0]
+        if name_of_question in name:
+            answers.append(filepath)
+    return answers
+
     # get all files in answers dir
     # find every one that matches name
     # download

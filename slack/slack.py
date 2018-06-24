@@ -5,10 +5,11 @@ from settings import SLACK_API_TOKEN, SLACK_CHANNEL_ID, SLACK_BOT_ID, SLACK_BOT_
 
 available_commands = """
 *Available Commands*
-list questions - get a list of questions \n
-list answers <number> - get a list of answers to current question number \n
-change question <number> <question> - replace question at number \n
-help - get this message
+--------------------
+`list questions` - get a list of questions \n
+`list answers <number>` - get a list of answers to current question number \n
+`change question <number> <question>` - replace question at number \n
+`help` - get this message
 """
 
 sc = SlackClient(SLACK_API_TOKEN)
@@ -48,13 +49,11 @@ def check_messages():
                 for q in questions:
                     q_str += "*%s* - %s\n" % (q, questions[q])
                 sc.api_call("chat.postMessage", text=q_str, **kwargs)
-            # elif "list answers" in command:
-            #     res = requests.get("http://localhost:5000/answers")
-            #     questions = json.loads(res.text)
-            #     q_str = ""
-            #     for q in questions:
-            #         q_str += "*%s* - %s\n" % (q, questions[q])
-            #     sc.api_call("chat.postMessage", text=q_str, **kwargs)
+            elif "list answers" in command:
+                command_parts = command.split(' ')
+                number = command_parts[2]
+                response = requests.get("http://localhost:5000/answers/%s" % number)
+                sc.api_call("chat.postMessage", text=response.text, **kwargs)
         elif "change question" in command:
             command_parts = command.split(' ')
             number = command_parts[2]

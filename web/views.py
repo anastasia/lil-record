@@ -18,6 +18,12 @@ def list_questions():
     return Response(json.dumps(questions))
 
 
+@app.route("/answers/<question_number>")
+def list_answers(question_number):
+    answers = storage.get_answers(question_number)
+    return Response(json.dumps(answers))
+
+
 @app.route("/upload/<type_of_file>/<filename>")
 def upload(type_of_file, filename):
     """
