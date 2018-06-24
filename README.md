@@ -11,4 +11,4 @@ To run:
   $ python run.py
 ```
     
-All lil-record related (hardware) assets are in `/record`
+All lil-record related (raspberry pi) assets are in `/record`

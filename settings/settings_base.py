@@ -7,3 +7,8 @@ SLACK_API_TOKEN = "slack-token"
 SLACK_CHANNEL_ID = "test-channel"
 SLACK_BOT_NAME = "lil-record"
 SLACK_BOT_ID = "bot-id"
+
+# raspberry pi settings
+RECORDINGS_DIR = "recordings"
+ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
+SOUND_CARD = 0
