@@ -32,7 +32,7 @@ def get_answer(question_number):
     return Response(json.dumps(answers))
 
 
-@app.route("/upload/<type_of_file>/<filename>")
+@app.route("/upload/<type_of_file>/<filename>", methods=["POST"])
 def upload(type_of_file, filename):
     """
     uploads to either answers or questions to s3
