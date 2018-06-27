@@ -9,15 +9,18 @@ import RPi.GPIO as GPIO
 RECORDINGS_DIR = "recordings"
 ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
 SOUND_CARD = 0
+COUNT_PIN = 24
+BOSS_PIN = 17
+RECV_PIN = 13
 
 GPIO.setwarnings(True)
 GPIO.setmode(GPIO.BCM)
 
 # rotary pins
-GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(18, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(COUNT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(BOSS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 # receiver up down
-GPIO.setup(13, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(RECV_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 c = 0
 
@@ -30,8 +33,6 @@ answers = []
 current_question = ''
 
 operator_has_been_called = False
-# GPIO.input(13) == GPIO.LOW => receiver is off the hook
-# GPIO.input(13) == GPIO.LOW => receiver is on the hook
 
 # prevents action from happening twice,
 # like recording or playing back twice
@@ -65,19 +66,18 @@ def main(pin):
        - all other numbers: play question
     """
     global c, operator_has_been_called, action
-
-    if GPIO.input(18) == GPIO.HIGH and c != 0:
+    if GPIO.input(BOSS_PIN) == GPIO.HIGH and c != 0:
         print("resetting!")
         c = 0
     else:
         if c == 0:
             return
 
-        if c < 10 and GPIO.input(13) == GPIO.LOW and action:
+        if c < 10 and GPIO.input(RECV_PIN) == GPIO.LOW and action:
             operator_has_been_called = True
             play_question(c)
 
-        elif c == 10 and GPIO.input(13) == GPIO.LOW and action:
+        elif c == 10 and GPIO.input(RECV_PIN) == GPIO.LOW and action:
             if not operator_has_been_called:
                 call_operator()
             else:
@@ -157,13 +157,7 @@ def get_all_questions():
     result = requests.get(url)
     questions = json.loads(result.text)
     return questions
-#
-#
-# def end_script(pin):
-#     global operator_has_been_called, current_question
-#     print("end script!")
-#     operator_has_been_called = False
-#     current_question = ""
+
 
 pid = subprocess.Popen(['python3', './killer.py'],
                  stdout=open('/dev/null', 'w'),
@@ -173,8 +167,8 @@ pid = subprocess.Popen(['python3', './killer.py'],
 print("killer pid", pid)
 
 print("killer on the loose!!!")
-GPIO.add_event_detect(18, GPIO.BOTH, callback=main)
-GPIO.add_event_detect(24, GPIO.FALLING, callback=count, bouncetime=85)
+GPIO.add_event_detect(BOSS_PIN, GPIO.BOTH, callback=main)
+GPIO.add_event_detect(COUNT_PIN, GPIO.FALLING, callback=count, bouncetime=85)
 
 try:
     while True:
@@ -184,6 +178,6 @@ except KeyboardInterrupt:
     os.system("kill -9 %s" % pid)
 
 
-GPIO.remove_event_detect(18)
-GPIO.remove_event_detect(24)
-GPIO.remove_event_detect(13)
+GPIO.remove_event_detect(BOSS_PIN)
+GPIO.remove_event_detect(COUNT_PIN)
+GPIO.remove_event_detect(RECV_PIN)
