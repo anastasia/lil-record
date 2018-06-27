@@ -5,6 +5,7 @@ import subprocess
 import requests
 import RPi.GPIO as GPIO
 
+
 RECORDINGS_DIR = "recordings"
 ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
 SOUND_CARD = 0
@@ -29,6 +30,12 @@ answers = []
 current_question = ''
 
 operator_has_been_called = False
+# GPIO.input(13) == GPIO.LOW => receiver is off the hook
+# GPIO.input(13) == GPIO.LOW => receiver is on the hook
+
+# prevents action from happening twice,
+# like recording or playing back twice
+action = True
 
 
 def text_to_speech(text):
@@ -49,12 +56,6 @@ def record(filename):
     code = os.system('arecord --device=plughw:0,0 --format=S16_LE --rate 44100 -V mono %s' % filename)
     return code
 
-# GPIO.input(13) == GPIO.LOW => receiver is off the hook
-# GPIO.input(13) == GPIO.LOW => receiver is on the hook
-
-# prevents action from happening twice,
-# like recording or playing back twice 
-action = True
 
 
 def main(pin):
@@ -63,8 +64,7 @@ def main(pin):
     10 - Record answer to questions
        - all other numbers: play question
     """
-    global c
-    global operator_has_been_called
+    global c, operator_has_been_called, action
 
     if GPIO.input(18) == GPIO.HIGH and c != 0:
         print("resetting!")
@@ -73,19 +73,15 @@ def main(pin):
         if c == 0:
             return
 
-        if c < 10 and c != 8 and GPIO.input(13) == GPIO.LOW and action:
+        if c < 10 and GPIO.input(13) == GPIO.LOW and action:
+            operator_has_been_called = True
             play_question(c)
-            
-        elif c == 8 and GPIO.input(13) == GPIO.LOW and action:
-            record_question()
-            
+
         elif c == 10 and GPIO.input(13) == GPIO.LOW and action:
             if not operator_has_been_called:
                 call_operator()
             else:
                 record_answer(c)
-
-        # print('counted', c)
 
 
 def create_answers_filename(question):
@@ -161,13 +157,13 @@ def get_all_questions():
     result = requests.get(url)
     questions = json.loads(result.text)
     return questions
-
-
-def end_script(pin):
-    global operator_has_been_called, current_question
-    print("end script!")
-    operator_has_been_called = False
-    current_question = ""
+#
+#
+# def end_script(pin):
+#     global operator_has_been_called, current_question
+#     print("end script!")
+#     operator_has_been_called = False
+#     current_question = ""
 
 pid = subprocess.Popen(['python3', './killer.py'],
                  stdout=open('/dev/null', 'w'),
@@ -177,7 +173,6 @@ pid = subprocess.Popen(['python3', './killer.py'],
 print("killer pid", pid)
 
 print("killer on the loose!!!")
-GPIO.add_event_detect(13, GPIO.RISING, callback=end_script, bouncetime=10)
 GPIO.add_event_detect(18, GPIO.BOTH, callback=main)
 GPIO.add_event_detect(24, GPIO.FALLING, callback=count, bouncetime=85)
 
