@@ -1,7 +1,8 @@
 import os
 import boto3
 import random
-from settings import S3_KEY, S3_SECRET, S3_LOCATION, S3_BUCKET
+from settings import S3_KEY, S3_SECRET, S3_LOCATION, S3_BUCKET, QUESTIONS_DIR
+
 
 s3 = boto3.client(
    "s3",
@@ -62,9 +63,9 @@ def download_current_questions():
     questions = {}
     for file_obj in dircontents:
         name = file_obj['Key'].split('/')[-1]
-        q = download(file_obj['Key'], name)
+        local_filename = os.path.join(QUESTIONS_DIR, name)
+        q = download(file_obj['Key'], local_filename)
         with open(q, "r") as f:
-            number, rest_of_name = name.split('_')
             questions[name] = f.read()
 
     return questions

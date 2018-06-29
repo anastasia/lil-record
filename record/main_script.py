@@ -4,10 +4,8 @@ import json
 import subprocess
 import requests
 import RPi.GPIO as GPIO
+from settings import RECORDINGS_DIR, ANSWERS_DIR, QUESTIONS_DIR, INSTRUCTIONS_DIR
 
-
-RECORDINGS_DIR = "recordings"
-ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
 SOUND_CARD = 0
 COUNT_PIN = 24
 BOSS_PIN = 17
@@ -24,11 +22,6 @@ GPIO.setup(RECV_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 c = 0
 
-recordings_dir = "/home/pi/recordings"
-questions_dir = os.path.join(recordings_dir, "questions")
-# answers_dir = os.path.join(recordings_dir, "answers")
-
-questions = []
 answers = []
 current_question = ''
 
@@ -56,7 +49,6 @@ def play(filename):
 def record(filename):
     code = os.system('arecord --device=plughw:0,0 --format=S16_LE --rate 44100 -V mono %s' % filename)
     return code
-
 
 
 def main(pin):
@@ -97,7 +89,6 @@ def create_answers_filename(question):
 def record_question():
     print("preparing to record")
     # getting question filename
-    global questions_dir
     questions = get_all_questions()
     highest_num = 0
     if len(questions) > 0:
@@ -107,14 +98,14 @@ def record_question():
             if num > highest_num:
                 highest_num = num
         highest_num += 1
-    filename_fullpath = os.path.join(questions_dir, '%s.wav' % highest_num)
+    filename_fullpath = os.path.join(QUESTIONS_DIR, '%s.wav' % highest_num)
     print('getting ready to record question', filename_fullpath)
     record(filename_fullpath)
     print('done recording question')
     # handle end
 
 
-def record_answer(count):
+def record_answer():
     global current_question
     filename = create_answers_filename(current_question)
     filename_path = os.path.join(ANSWERS_DIR, filename)
@@ -126,23 +117,26 @@ def record_answer(count):
 
 
 def play_question(count):
-    global action, questions_dir, current_question
+    global action, current_question
     action = False
     questions = get_all_questions()
     for filename in questions:
+        # match dial count to question filename
         if filename[0:2] == "%s_" % str(count):
             question_to_ask = questions[filename]
-            current_question = filename
-            text_to_speech(question_to_ask)
-            time.sleep(3)
+            current_question = filename.split(".mp3")[0]
+            play(question_to_ask)
+            # TODO: record after the tone
+            # TODO: play tone
+            # record_answer()
             break
 
 
 def call_operator():
-    global action, questions_directory, operator_has_been_called
+    global action, operator_has_been_called
     action = False
     operator_has_been_called = True
-    play(os.path.join(recordings_dir, "instructions.wav"))
+    play(os.path.join(INSTRUCTIONS_DIR, "instructions.wav"))
     
     
 def count(pin):
@@ -153,9 +147,7 @@ def count(pin):
 
 
 def get_all_questions():
-    url = "http://localhost:5000/questions"
-    result = requests.get(url)
-    questions = json.loads(result.text)
+    questions = [os.path.join(QUESTIONS_DIR, f) for f in os.listdir(QUESTIONS_DIR) if f.endswith(".mp3")]
     return questions
 
 
@@ -164,9 +156,9 @@ pid = subprocess.Popen(['python3', './killer.py'],
                  stderr=open('killer.log', 'a'),
                  preexec_fn=os.setpgrp
                  ).pid
-print("killer pid", pid)
 
-print("killer on the loose!!!")
+print("killer on the loose!!!",  pid)
+
 GPIO.add_event_detect(BOSS_PIN, GPIO.BOTH, callback=main)
 GPIO.add_event_detect(COUNT_PIN, GPIO.FALLING, callback=count, bouncetime=85)
 

@@ -11,4 +11,7 @@ SLACK_BOT_ID = "bot-id"
 # raspberry pi settings
 RECORDINGS_DIR = "recordings"
 ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
+QUESTIONS_DIR = "%s/%s" % (RECORDINGS_DIR, "questions")
+INSTRUCTIONS_DIR = "%s/%s" % (RECORDINGS_DIR, "instructions")
+
 SOUND_CARD = 0
