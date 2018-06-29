@@ -1,6 +1,5 @@
 import requests
 import json
-import wave
 from slackclient import SlackClient
 from settings import SLACK_API_TOKEN, SLACK_CHANNEL_ID, SLACK_BOT_ID, SLACK_BOT_NAME
 
@@ -14,15 +13,6 @@ available_commands = """
 """
 
 sc = SlackClient(SLACK_API_TOKEN)
-"""
-import time
-from slack import slack
-if slack.sc.rtm_connect():
-    print('connected')
-    while True:
-        slack.check_messages()
-        time.sleep(1)
-"""
 
 def post(message, channel=SLACK_CHANNEL_ID):
     sc.api_call(
@@ -78,3 +68,5 @@ def check_messages():
                         **kwargs)
         elif command == "help":
             sc.api_call("chat.postMessage", text=available_commands, **kwargs)
+
+
