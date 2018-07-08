@@ -6,7 +6,7 @@ GPIO.setwarnings(True)
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(13, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
+print("killer script is running")
 def end_script(pin):
    print("stopping script")
    os.system('killall arecord')

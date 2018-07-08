@@ -42,7 +42,7 @@ def text_to_speech(text):
 
 def play(filename):
     print("getting filename", filename)
-    code = os.system('aplay --device=plughw:0,0 %s' % filename)
+    code = os.system('aplay --device=plughw:0 %s' % filename)
     return code
 
 
@@ -120,11 +120,16 @@ def play_question(count):
     global action, current_question
     action = False
     questions = get_all_questions()
+    print("calling method play_question", count)
     for filename in questions:
         # match dial count to question filename
-        if filename[0:2] == "%s_" % str(count):
-            question_to_ask = questions[filename]
-            current_question = filename.split(".mp3")[0]
+
+        print("checking filename")
+        filename_count = filename.split("_")[0][-1]
+        if filename_count == str(count):
+            print("finding matching file")
+            question_to_ask = filename
+            current_question = filename.split(".wav")[0]
             play(question_to_ask)
             # TODO: record after the tone
             # TODO: play tone
@@ -147,11 +152,13 @@ def count(pin):
 
 
 def get_all_questions():
-    questions = [os.path.join(QUESTIONS_DIR, f) for f in os.listdir(QUESTIONS_DIR) if f.endswith(".mp3")]
+    print(os.listdir(QUESTIONS_DIR))
+    questions = [os.path.join(QUESTIONS_DIR, f) for f in os.listdir(QUESTIONS_DIR) if f.endswith(".wav")]
+    print("getting questions:", questions)
     return questions
 
 
-pid = subprocess.Popen(['python3', './killer.py'],
+pid = subprocess.Popen(['python3', '/home/pi/lil-record/killer.py'],
                  stdout=open('/dev/null', 'w'),
                  stderr=open('killer.log', 'a'),
                  preexec_fn=os.setpgrp

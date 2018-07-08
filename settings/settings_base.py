@@ -9,7 +9,7 @@ SLACK_BOT_NAME = "lil-record"
 SLACK_BOT_ID = "bot-id"
 
 # raspberry pi settings
-RECORDINGS_DIR = "recordings"
+RECORDINGS_DIR = "/home/pi/lil-record/recordings"
 ANSWERS_DIR = "%s/%s" % (RECORDINGS_DIR, "answers")
 QUESTIONS_DIR = "%s/%s" % (RECORDINGS_DIR, "questions")
 INSTRUCTIONS_DIR = "%s/%s" % (RECORDINGS_DIR, "instructions")
