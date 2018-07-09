@@ -38,7 +38,9 @@ def check_messages():
 
         command = m.get('text', '').split("<@%s> " % SLACK_BOT_ID)[1]
         try:
-            if "list" in command:
+            if command == "hi" or command == "hello":
+                sc.api_call("chat.postMessage", text="hello!", **kwargs)
+            elif "list" in command:
                 if command == "list questions":
                     res = requests.get("http://localhost:5000/questions")
                     questions = json.loads(res.text)
@@ -57,13 +59,12 @@ def check_messages():
                 new_question = " ".join(command_parts[3:])
                 response = requests.post("http://localhost:5000/change_current/%s" % number, json={'data': new_question})
                 sc.api_call("chat.postMessage", text=response.text, **kwargs)
-
             elif "get answers" in command:
                 command_parts = command.split(' ')
                 number = command_parts[2]
                 response = requests.get("http://localhost:5000/answers/%s" % number)
+                text = json.loads(response.text)
                 sc.api_call("chat.postMessage", text=response.text, **kwargs)
-
             elif "get answer" in command:
                 command_parts = command.split(' ')
                 number = command_parts[2]
@@ -76,7 +77,7 @@ def check_messages():
                     sc.api_call("files.upload",
                             file=open(local_filepath, 'rb'),
                             display_as_bot=True,
-                            channels=[SLACK_CHANNEL_ID],
+                            channels=[m.get('channel', SLACK_CHANNEL_ID)],
                             **kwargs)
             elif command == "help":
                 sc.api_call("chat.postMessage", text=available_commands, **kwargs)
