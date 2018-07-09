@@ -20,12 +20,9 @@ def main():
         os.remove(os.path.join(QUESTIONS_DIR, file))
     text_questions = download_current_questions()
     for qname in text_questions:
+        print("getting question, turning into mp3", qname)
         name = qname.split(".txt")[0]
         synthesize_text(text_questions[qname], name)
-        wav_name = os.path.join(QUESTIONS_DIR, name + ".wav")
-        mp3_name = os.path.join(QUESTIONS_DIR, name + ".mp3")
-        # convert files to .wav
-        os.system("mpg321 -w %s %s" % (wav_name, mp3_name))
 
     text_filelist = [f for f in os.listdir(QUESTIONS_DIR) if f.endswith('.txt') or f.endswith('.mp3')]
     for txt in text_filelist:

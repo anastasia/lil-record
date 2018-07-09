@@ -1,6 +1,7 @@
 import os
 import boto3
 import random
+import collections
 from settings import S3_KEY, S3_SECRET, S3_LOCATION, S3_BUCKET, QUESTIONS_DIR
 
 
@@ -67,10 +68,19 @@ def download_current_questions():
         q = download(file_obj['Key'], local_filename)
         with open(q, "r") as f:
             questions[name] = f.read()
-
+    questions = collections.OrderedDict(sorted(questions.items(), key=lambda k: k[0]))
     return questions
 
 
+def get_current_question_filename(number):
+    dircontents = get_contents("current")
+    for file_obj in dircontents:
+        name = file_obj['Key'].split('/')[-1]
+        num, rest_of_name = name.split('_')
+        if num == number:
+            return file_obj['Key']
+        
+        
 def get_current_question_by_number(number):
     dircontents = get_contents("current")
     for file_obj in dircontents:
@@ -98,7 +108,11 @@ def get_answers(question_num):
     """
     Get list of answer paths to question
     """
-    question = get_current_question_by_number(question_num)
+    question_num = str(question_num)
+    question = get_current_question_filename(question_num)
+    print("getting question: %s" % question)
+    if not question:
+        return []
     folder, filename = question.split('/')
     name_of_question = filename.split('.')[0]
     all_answers = get_contents("answers")
@@ -107,6 +121,7 @@ def get_answers(question_num):
         filepath = file_obj['Key'].split('/')[-1]
         name = filepath.split('.')[0]
         if name_of_question in name:
+            print("finding answer %s" %  name)
             answers.append(filepath)
     return answers
 
@@ -120,7 +135,7 @@ def get_random_answer(question_num):
         return "Something went wrong"
     if len(answers) == 0:
         # no answers were found
-        return ""
+        return "No answers were found to this question"
     print("answers", answers)
     rand = random.randrange(0, len(answers))
     local_filepath = "/tmp/%s" % answers[rand].split('/')[-1]
