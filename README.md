@@ -14,11 +14,12 @@ To run:
 All lil-record related (raspberry pi) assets are in `/record`
 
 
-
+## systemctl launches scripts
+check out what's running:
 ```
   $ systemctl status lilrecord.service
 ```
-Starts up four processes:
+You should see four processes:
 - `python3 /home/pi/lil-record/main_script.py`
 
 An event detection script responsible for reading all of the pins and basically allowing the raspberry pi to power a rotary phone
