@@ -3,3 +3,4 @@ venv
 __pycache__
 .old_setup
 settings/settings.py
+recordings/*
