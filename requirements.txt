@@ -36,7 +36,7 @@ python-dateutil==2.7.3
 pyttsx3==2.7
 pytz==2018.4
 requests==2.19.1
-rsa==3.4.2
+rsa==4.1
 s3transfer==0.1.13
 simplegeneric==0.8.1
 six==1.11.0
