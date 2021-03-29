@@ -31,7 +31,7 @@ protobuf==3.6.0
 ptyprocess==0.6.0
 pyasn1==0.4.3
 pyasn1-modules==0.2.1
-Pygments==2.2.0
+Pygments==2.7.4
 python-dateutil==2.7.3
 pyttsx3==2.7
 pytz==2018.4
